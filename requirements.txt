@@ -3,11 +3,4 @@ Flask-SQLAlchemy==3.1.1
 Flask-Login==0.6.3
 Flask-Mail==0.9.1
 Werkzeug==3.0.3
-
-# Optional - only needed if you want PDF thumbnails on the design preview.
-# If you skip installing this, PDFs just show a generic file icon instead
-# of a thumbnail; everything else still works.
-# PyMuPDF==1.24.9
-
-# Optional - only needed if you wire up real SMS sending (see notifications.py).
-# requests==2.32.3
+gunicorn
