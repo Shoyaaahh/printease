@@ -1,0 +1,67 @@
+{% extends 'base.html' %}
+{% block title %}Request #{{ req.id }}{% endblock %}
+{% block content %}
+<a href="{{ url_for('customer.dashboard') }}" class="request-back mb-3 d-inline-flex">&larr; Back to My Requests</a>
+
+<section class="request-panel request-enter">
+    <header class="request-heading">
+        <div><div class="request-kicker">PRINT REQUEST · #{{ req.id }}</div><h1>{{ req.service_type_label }}</h1></div>
+        <span class="request-status badge bg-{{ req.status_badge }}"><span class="status-pulse"></span>{{ req.status_label }}</span>
+    </header>
+
+    {% if req.status != 'cancelled' %}
+    <div class="request-progress" aria-label="Request progress">
+        {% set stage = {'pending': 1, 'in_queue': 2, 'completed': 3}.get(req.status, 1) %}
+        <div class="progress-step {{ 'is-done' if stage >= 1 }}"><span>1</span><div><strong>Received</strong><small>Request submitted</small></div></div>
+        <div class="progress-rail {{ 'is-done' if stage >= 2 }}"></div>
+        <div class="progress-step {{ 'is-done' if stage >= 2 }}"><span>2</span><div><strong>In progress</strong><small>Being prepared</small></div></div>
+        <div class="progress-rail {{ 'is-done' if stage >= 3 }}"></div>
+        <div class="progress-step {{ 'is-done' if stage >= 3 }}"><span>3</span><div><strong>Ready</strong><small>Complete</small></div></div>
+    </div>
+    {% else %}<div class="request-cancelled">This request was cancelled.</div>{% endif %}
+
+    <div class="request-content">
+        <div class="request-file-column">
+            <button type="button" class="preview-button" data-bs-toggle="modal" data-bs-target="#previewModal" aria-label="Open a larger design preview">
+                {% if req.preview_filename %}<img src="{{ url_for('customer.uploaded_file', filename=req.preview_filename) }}" alt="Design preview for {{ req.original_filename }}">
+                {% else %}<span class="preview-empty"><span>▧</span>No preview available</span>{% endif %}
+                {% if req.preview_filename %}<span class="preview-zoom">↗ View preview</span>{% endif %}
+            </button>
+            <div class="file-caption"><span class="file-type-icon">↗</span><div><strong>{{ req.original_filename }}</strong><small>Original uploaded file</small></div></div>
+            <a href="{{ url_for('customer.uploaded_file', filename=req.filename) }}" target="_blank" class="btn btn-outline-primary download-file">Download original <span aria-hidden="true">↓</span></a>
+        </div>
+
+        <div class="request-facts">
+            <div class="fact-tile"><span class="fact-icon">▤</span><div><small>Copies</small><strong>{{ req.copies }}</strong></div></div>
+            <div class="fact-tile"><span class="fact-icon">✦</span><div><small>Priority lane</small><strong>{{ 'Yes' if req.is_priority else 'Standard' }}</strong></div></div>
+            <div class="fact-tile fact-wide"><span class="fact-icon">⚙</span><div><small>Print specifications</small><strong>{{ req.display_specs }}</strong></div></div>
+            <div class="fact-tile"><span class="fact-icon">₱</span><div><small>Estimated price</small><strong>{{ req.formatted_price }}</strong></div></div>
+            <div class="fact-tile"><span class="fact-icon">◷</span><div><small>Submitted</small><strong>{{ req.submitted_at.strftime('%b %d, %Y · %I:%M %p') }}</strong></div></div>
+            {% if req.completion_date %}<div class="fact-tile fact-wide"><span class="fact-icon">▣</span><div><small>Estimated completion</small><strong>{{ req.completion_date.strftime('%B %d, %Y') }}</strong></div></div>{% endif %}
+            {% if req.admin_notes %}<div class="shop-note fact-wide"><span>✎</span><div><small>A note from the shop</small><strong>{{ req.admin_notes }}</strong></div></div>{% endif %}
+        </div>
+    </div>
+</section>
+
+{% if req.preview_filename %}
+<div class="modal fade" id="previewModal" tabindex="-1" aria-labelledby="previewModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-xl"><div class="modal-content preview-modal-content">
+        <div class="modal-header"><div><small class="text-secondary">DESIGN PREVIEW</small><h2 class="modal-title fs-5" id="previewModalLabel">{{ req.original_filename }}</h2></div><button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button></div>
+        <div class="modal-body"><img src="{{ url_for('customer.uploaded_file', filename=req.preview_filename) }}" alt="Large design preview for {{ req.original_filename }}"></div>
+    </div></div>
+</div>
+{% endif %}
+
+<section class="card notes-panel">
+    <div class="card-header notes-heading"><div><span class="notes-icon">✎</span><div><h2>Additional notes</h2><p>Questions or changes for this request</p></div></div><span class="notes-count">{{ req.comments|length }} {{ 'note' if req.comments|length == 1 else 'notes' }}</span></div>
+    {% if req.comments %}<ul class="list-group list-group-flush note-list">
+        {% for c in req.comments %}<li class="list-group-item"><div class="note-meta"><strong>{{ c.author.full_name }}</strong><span>{{ c.created_at.strftime('%b %d, %Y · %I:%M %p') }}</span></div><p>{{ c.comment_text }}</p></li>{% endfor %}
+    </ul>{% else %}<div class="empty-notes"><span>☷</span><strong>No notes yet</strong><small>Add a note if you need to share a detail with the shop.</small></div>{% endif %}
+    {% if req.status in ['pending', 'in_queue'] %}<div class="note-compose"><form method="POST"><label class="form-label" for="comment_text">Add a note</label><textarea id="comment_text" name="comment_text" class="form-control" rows="2" maxlength="1000" placeholder="Share a detail or request a change…"></textarea><div class="compose-footer"><small id="noteCount">0 / 1000</small><button type="submit" class="btn btn-primary">Send note <span aria-hidden="true">→</span></button></div></form></div>{% endif %}
+</section>
+{% endblock %}
+{% block scripts %}<script>
+    const noteInput = document.getElementById('comment_text');
+    const noteCount = document.getElementById('noteCount');
+    if (noteInput && noteCount) noteInput.addEventListener('input', () => noteCount.textContent = `${noteInput.value.length} / 1000`);
+</script>{% endblock %}

@@ -1,0 +1,132 @@
+{% extends 'base.html' %}
+{% block title %}Request #{{ req.id }}{% endblock %}
+{% block content %}
+<a href="{{ url_for('admin.dashboard') }}" class="request-back mb-3 d-inline-flex">&larr; Back to Dashboard</a>
+
+<section class="request-panel request-enter admin-request-panel">
+    <header class="request-heading">
+        <div><div class="request-kicker">ADMIN REVIEW · REQUEST #{{ req.id }}</div><h1>{{ req.customer.full_name }}</h1><p class="admin-customer-sub">{{ req.customer.email }}{% if req.customer.phone_number %} · {{ req.customer.phone_number }}{% endif %}</p></div>
+        <span class="request-status badge bg-{{ req.status_badge }}"><span class="status-pulse"></span>{{ req.status_label }}</span>
+    </header>
+    {% if req.status != 'cancelled' %}
+    <div class="request-progress" aria-label="Request progress">
+        {% set stage = {'pending': 1, 'in_queue': 2, 'completed': 3}.get(req.status, 1) %}
+        <div class="progress-step {{ 'is-done' if stage >= 1 }}"><span>1</span><div><strong>Received</strong><small>Request submitted</small></div></div><div class="progress-rail {{ 'is-done' if stage >= 2 }}"></div>
+        <div class="progress-step {{ 'is-done' if stage >= 2 }}"><span>2</span><div><strong>In progress</strong><small>Being prepared</small></div></div><div class="progress-rail {{ 'is-done' if stage >= 3 }}"></div>
+        <div class="progress-step {{ 'is-done' if stage >= 3 }}"><span>3</span><div><strong>Ready</strong><small>Complete</small></div></div>
+    </div>
+    {% else %}<div class="request-cancelled">This request was cancelled.</div>{% endif %}
+    <div class="request-content">
+        <div class="request-file-column">
+            <button type="button" class="preview-button" {% if req.preview_filename %}data-bs-toggle="modal" data-bs-target="#adminPreviewModal" aria-label="Open a larger design preview"{% else %}disabled{% endif %}>
+                {% if req.preview_filename %}<img src="{{ url_for('admin.uploaded_file', filename=req.preview_filename) }}" alt="Design preview for {{ req.original_filename }}"><span class="preview-zoom">↗ View preview</span>
+                {% else %}<span class="preview-empty"><span>▧</span>No preview available</span>{% endif %}
+            </button>
+            <div class="file-caption"><span class="file-type-icon">↗</span><div><strong>{{ req.original_filename }}</strong><small>Customer’s uploaded file</small></div></div>
+            <a href="{{ url_for('admin.uploaded_file', filename=req.filename) }}" target="_blank" class="btn btn-outline-primary download-file">Download original <span aria-hidden="true">↓</span></a>
+        </div>
+        <div class="request-facts">
+            <div class="fact-tile"><span class="fact-icon">▣</span><div><small>Service</small><strong>{{ req.service_type_label }}</strong></div></div>
+            <div class="fact-tile"><span class="fact-icon">♙</span><div><small>Customer type</small><strong>{% if req.customer.customer_type == 'student' %}Student · {{ req.customer.student_id }}{% else %}Normal customer{% endif %}</strong></div></div>
+            <div class="fact-tile"><span class="fact-icon">✦</span><div><small>Priority lane</small><strong>{{ 'Yes · urgent' if req.is_urgent else ('Yes · student' if req.customer.customer_type == 'student' else 'Standard') }}</strong></div></div>
+            <div class="fact-tile"><span class="fact-icon">▤</span><div><small>Copies</small><strong>{{ req.copies }}</strong></div></div>
+            <div class="fact-tile fact-wide"><span class="fact-icon">⚙</span><div><small>Print specifications</small><strong>{{ req.display_specs }}</strong></div></div>
+            <div class="fact-tile"><span class="fact-icon">₱</span><div><small>Estimated price</small><strong>{{ req.formatted_price }}</strong></div></div>
+            <div class="fact-tile"><span class="fact-icon">◷</span><div><small>Submitted</small><strong>{{ req.submitted_at.strftime('%b %d, %Y · %I:%M %p') }}</strong></div></div>
+            {% if req.completion_date %}<div class="fact-tile fact-wide"><span class="fact-icon">▣</span><div><small>Estimated completion</small><strong>{{ req.completion_date.strftime('%B %d, %Y') }}</strong></div></div>{% endif %}
+        </div>
+    </div>
+</section>
+
+<section class="card admin-actions-panel edit-request-panel">
+    <div class="admin-section-heading">
+        <span class="admin-section-icon" aria-hidden="true">✎</span>
+        <div><h2>Edit request details</h2><p>Adjust the order and update the estimate. The customer will be notified.</p></div>
+    </div>
+    <div class="card-body">
+        <form method="POST" class="edit-request-form">
+            <input type="hidden" name="action" value="edit_details">
+            <div>
+                <label class="form-label" for="edit-copies">Number of copies</label>
+                <input class="form-control" id="edit-copies" name="copies" type="number" min="1" value="{{ req.copies }}" required>
+            </div>
+
+            {% if req.service_type in ['document_print', 'soft_bind', 'hard_bind', 'laminate'] %}
+            <div>
+                <label class="form-label" for="edit-paper-size">Paper size</label>
+                <select class="form-select" id="edit-paper-size" name="paper_size" required>
+                    {% for size in paper_sizes %}
+                    <option value="{{ size }}" {{ 'selected' if req.paper_size == size }}>{{ size }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            {% endif %}
+
+            {% if req.service_type in ['document_print', 'soft_bind', 'hard_bind'] %}
+            <div>
+                <label class="form-label" for="edit-page-count">Number of pages</label>
+                <input class="form-control" id="edit-page-count" name="page_count" type="number" min="1" value="{{ req.page_count or 1 }}" required>
+            </div>
+            <div class="form-check edit-color-option">
+                <input class="form-check-input" id="edit-colored" name="is_colored" type="checkbox" {{ 'checked' if req.is_colored }}>
+                <label class="form-check-label" for="edit-colored">Color printing</label>
+            </div>
+            {% elif req.service_type == 'tarpaulin' %}
+            <div>
+                <label class="form-label" for="edit-width">Width (ft)</label>
+                <input class="form-control" id="edit-width" name="width_ft" type="number" min="0.1" step="0.1" value="{{ req.width_ft }}" required>
+            </div>
+            <div>
+                <label class="form-label" for="edit-height">Height (ft)</label>
+                <input class="form-control" id="edit-height" name="height_ft" type="number" min="0.1" step="0.1" value="{{ req.height_ft }}" required>
+            </div>
+            {% elif req.service_type == 'shirt_print' %}
+            <div>
+                <label class="form-label" for="edit-shirt-size">Shirt size</label>
+                <select class="form-select" id="edit-shirt-size" name="shirt_size" required>
+                    {% for size in shirt_sizes %}
+                    <option value="{{ size }}" {{ 'selected' if req.shirt_size == size }}>{{ size }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div>
+                <label class="form-label" for="edit-shirt-color">Shirt color</label>
+                <input class="form-control" id="edit-shirt-color" name="shirt_color" maxlength="30" value="{{ req.shirt_color or '' }}">
+            </div>
+            <div class="form-check edit-color-option">
+                <input class="form-check-input" id="edit-shirt-colored" name="is_colored" type="checkbox" {{ 'checked' if req.is_colored }}>
+                <label class="form-check-label" for="edit-shirt-colored">Full-color design</label>
+            </div>
+            {% endif %}
+
+            <div class="edit-request-submit"><button type="submit" class="btn btn-primary">Save order changes <span aria-hidden="true">→</span></button></div>
+        </form>
+    </div>
+</section>
+
+{% if req.preview_filename %}<div class="modal fade" id="adminPreviewModal" tabindex="-1" aria-labelledby="adminPreviewTitle" aria-hidden="true"><div class="modal-dialog modal-dialog-centered modal-xl"><div class="modal-content preview-modal-content"><div class="modal-header"><div><small class="text-secondary">DESIGN PREVIEW</small><h2 class="modal-title fs-5" id="adminPreviewTitle">{{ req.original_filename }}</h2></div><button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button></div><div class="modal-body"><img src="{{ url_for('admin.uploaded_file', filename=req.preview_filename) }}" alt="Large design preview"></div></div></div></div>{% endif %}
+
+{% if req.status in ['pending', 'in_queue'] %}
+<section class="card admin-actions-panel">
+    <div class="admin-section-heading"><span class="admin-section-icon">⚡</span><div><h2>Request actions</h2><p>Update the customer on the next step</p></div></div>
+    <div class="card-body">
+        {% if req.status == 'pending' %}<form method="POST" class="row g-3 align-items-end">
+            <input type="hidden" name="action" value="accept">
+            <div class="col-lg-4"><label class="form-label" for="completion-date">Estimated completion</label><input id="completion-date" type="date" name="completion_date" class="form-control" required></div>
+            <div class="col-lg-5"><label class="form-label" for="admin-notes">Note for customer <span class="text-secondary fw-normal">(optional)</span></label><input id="admin-notes" type="text" name="admin_notes" class="form-control" maxlength="500" placeholder="e.g. Pickup after 3pm"></div>
+            <div class="col-lg-3"><button type="submit" class="btn btn-success w-100 action-main">Accept &amp; queue <span aria-hidden="true">→</span></button></div>
+        </form>{% endif %}
+        <div class="d-flex flex-wrap gap-2 {{ 'mt-3' if req.status == 'pending' else '' }}">
+            {% if req.status == 'in_queue' %}<form method="POST"><input type="hidden" name="action" value="complete"><button type="submit" class="btn btn-primary action-main">Mark as completed <span aria-hidden="true">✓</span></button></form>{% endif %}
+            <form method="POST" onsubmit="return confirm('Cancel this request?');"><input type="hidden" name="action" value="cancel"><button type="submit" class="btn btn-outline-danger">Cancel request</button></form>
+        </div>
+    </div>
+</section>
+{% endif %}
+
+<section class="card notes-panel admin-notes-panel">
+    <div class="card-header notes-heading"><div><span class="notes-icon">✎</span><div><h2>Customer notes</h2><p>Notes and add-ons for this request</p></div></div><span class="notes-count">{{ req.comments|length }} {{ 'note' if req.comments|length == 1 else 'notes' }}</span></div>
+    {% if req.comments %}<ul class="list-group list-group-flush note-list">{% for c in req.comments %}<li class="list-group-item"><div class="note-meta"><strong>{{ c.author.full_name }}</strong><span>{{ c.created_at.strftime('%b %d, %Y · %I:%M %p') }}</span></div><p>{{ c.comment_text }}</p></li>{% endfor %}</ul>
+    {% else %}<div class="empty-notes"><span>☷</span><strong>No customer notes</strong><small>Notes added by the customer will appear here.</small></div>{% endif %}
+</section>
+{% endblock %}

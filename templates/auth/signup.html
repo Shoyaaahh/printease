@@ -1,0 +1,75 @@
+{% extends 'base.html' %}
+{% block title %}Sign Up{% endblock %}
+{% block content %}
+<div class="auth-art"></div>
+<section class="auth-layout">
+    <div class="auth-copy">
+        <span class="eyebrow"><span class="eyebrow-dot"></span> Make room for your ideas</span>
+        <h1>Print plans<br>start <span>right here.</span></h1>
+        <p>Create an account to send print-ready files, customize each order, and follow its progress from submission to pickup.</p>
+        <div class="feature-list"><span class="feature-pill">✓ All your requests in one place</span><span class="feature-pill">✦ Student priority available</span></div>
+        <div class="auth-printer-stage" aria-hidden="true">
+            <div class="auth-printer-caption"><span></span> READY WHEN YOU ARE</div>
+            <div class="printer-scene auth-printer-scene">
+                <div class="paper-sheet"><i></i><i></i><i></i></div>
+                <div class="printer-top"></div><div class="printer-body"></div>
+                <div class="printer-slot"></div><div class="printer-display"></div><div class="printer-light"></div>
+            </div>
+            <span class="auth-printer-sparkle sparkle-one">✦</span>
+            <span class="auth-printer-sparkle sparkle-two">✧</span>
+        </div>
+    </div>
+    <div class="card auth-card">
+        <div class="mb-4"><span class="eyebrow">Join PrintEase</span><h2 class="mt-3 mb-1">Create your account</h2><p class="text-secondary mb-0">It only takes a minute to get started.</p></div>
+        <form method="POST">
+                    <div class="mb-3">
+                        <label class="form-label" for="full-name">Full name</label>
+                        <input id="full-name" type="text" name="full_name" class="form-control" autocomplete="name" value="{{ form.get('full_name', '') }}" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label" for="signup-email">Email</label>
+                        <input id="signup-email" type="email" name="email" class="form-control" autocomplete="email" value="{{ form.get('email', '') }}" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Phone Number <span class="text-muted">(optional, for SMS updates)</span></label>
+                        <input type="tel" name="phone_number" class="form-control" placeholder="09XXXXXXXXX" value="{{ form.get('phone_number', '') }}">
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label" for="signup-password">Password</label>
+                            <div class="input-wrap"><input id="signup-password" type="password" name="password" class="form-control" autocomplete="new-password" required><button class="toggle-password" type="button" data-password-toggle="signup-password" aria-label="Show password">Show</button></div>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label" for="confirm-password">Confirm password</label>
+                            <input id="confirm-password" type="password" name="confirm_password" class="form-control" autocomplete="new-password" required>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">I am a...</label>
+                        <select name="customer_type" id="customer_type" class="form-select">
+                            <option value="normal" {{ 'selected' if form.get('customer_type', 'normal') == 'normal' }}>Normal Customer</option>
+                            <option value="student" {{ 'selected' if form.get('customer_type') == 'student' }}>Student</option>
+                        </select>
+                    </div>
+                    <div class="mb-3 {{ '' if form.get('customer_type') == 'student' else 'd-none' }}" id="student_id_field">
+                        <label class="form-label">Student ID Number</label>
+                        <input type="text" name="student_id" class="form-control" placeholder="XX-XXXXX" value="{{ form.get('student_id', '') }}">
+                        <div class="form-text">Format: XX-XXXXX (e.g. 22-01234). Students get priority-lane printing.</div>
+                    </div>
+                    <button type="submit" class="btn btn-primary w-100">Create account <span aria-hidden="true">→</span></button>
+                </form>
+                <p class="mt-3 text-center mb-0">
+                    Already have an account? <a href="{{ url_for('auth.login') }}">Log in</a>
+                </p>
+    </div>
+</section>
+{% endblock %}
+{% block scripts %}<script>
+    const typeSelect = document.getElementById('customer_type');
+    const studentField = document.getElementById('student_id_field');
+    function toggleStudentField() {
+        studentField.classList.toggle('d-none', typeSelect.value !== 'student');
+    }
+    typeSelect.addEventListener('change', toggleStudentField);
+    toggleStudentField();
+</script>{% endblock %}

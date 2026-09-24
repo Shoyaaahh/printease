@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}PrintEase{% endblock %} - Marian's Printing Services</title>
+    <script>
+        (() => {
+            try {
+                const savedTheme = localStorage.getItem('printease-theme');
+                document.documentElement.dataset.theme = savedTheme === 'dark' ? 'dark' : 'light';
+            } catch (_) {
+                document.documentElement.dataset.theme = 'light';
+            }
+        })();
+    </script>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="{{ url_for('static', filename='css/style.css', v='20260924-3') }}" rel="stylesheet">
+</head>
+<body>
+{% if request.endpoint == 'auth.login' %}
+<div class="intro-screen" id="printerIntro" aria-label="PrintEase is getting ready">
+    <div class="intro-inner" role="status">
+        <div class="printer-scene" aria-hidden="true">
+            <div class="paper-sheet"><i></i><i></i><i></i></div>
+            <div class="printer-top"></div><div class="printer-body"></div>
+            <div class="printer-slot"></div><div class="printer-display"></div><div class="printer-light"></div>
+        </div>
+        <div class="intro-logo">PrintEase</div>
+        <div class="intro-tagline">A little print magic, coming right up.</div>
+    </div>
+</div>
+{% endif %}
+{% set is_admin_user = current_user.is_authenticated and current_user.role == 'admin' %}
+<nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+    <div class="container">
+        <a class="navbar-brand fw-bold" href="{{ url_for('index') }}"><span class="brand-mark">P</span>PrintEase</a>
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navMenu">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navMenu">
+            <ul class="navbar-nav ms-auto align-items-lg-center">
+                {% if current_user.is_authenticated %}
+                    {% if current_user.role == 'customer' %}
+                        <li class="nav-item"><a class="nav-link" href="{{ url_for('customer.dashboard') }}"><span class="nav-item-icon" aria-hidden="true">▤</span> My Requests</a></li>
+                        <li class="nav-item"><a class="nav-link" href="{{ url_for('customer.submit_request') }}"><span class="nav-item-icon" aria-hidden="true">＋</span> New Request</a></li>
+                    {% endif %}
+                {% else %}
+                    <li class="nav-item"><a class="nav-link" href="{{ url_for('auth.login') }}">Login</a></li>
+                    <li class="nav-item"><a class="btn btn-primary btn-sm ms-lg-2" href="{{ url_for('auth.signup') }}">Sign Up</a></li>
+                {% endif %}
+                <li class="nav-item dropdown settings-nav-item">
+                    <button class="settings-toggle dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                        <span class="settings-toggle-icon" aria-hidden="true">⚙</span> Settings
+                    </button>
+                    <ul class="dropdown-menu dropdown-menu-end settings-menu">
+                        <li>
+                            <button class="dropdown-item settings-menu-item theme-toggle" id="themeToggle" type="button" aria-pressed="false" aria-label="Switch to dark mode">
+                                <span class="theme-toggle-icon" aria-hidden="true">☾</span>
+                                <span class="theme-toggle-text">Dark mode</span>
+                            </button>
+                        </li>
+                        {% if current_user.is_authenticated %}
+                        <li><hr class="dropdown-divider"></li>
+                        <li><a class="dropdown-item settings-menu-item" href="{{ url_for('auth.profile') }}"><span aria-hidden="true">♙</span> Profile settings</a></li>
+                        <li><a class="dropdown-item settings-menu-item settings-logout" href="{{ url_for('auth.logout') }}"><span aria-hidden="true">↪</span> Log out</a></li>
+                        {% endif %}
+                    </ul>
+                </li>
+            </ul>
+        </div>
+    </div>
+</nav>
+
+<div class="app-layout {{ 'admin-app-layout' if is_admin_user else '' }}">
+    {% if is_admin_user %}
+    <aside class="admin-sidebar" aria-label="Admin navigation">
+        <div class="admin-sidebar-heading"><span aria-hidden="true">✦</span><div>PRINT<span>DESK</span><small>ADMIN WORKSPACE</small></div></div>
+        <div class="sidebar-section-label">WORKSPACE</div>
+        <a class="sidebar-link {{ 'is-active' if request.endpoint == 'admin.dashboard' }}" href="{{ url_for('admin.dashboard') }}"><span aria-hidden="true">▤</span> Active requests</a>
+        <a class="sidebar-link {{ 'is-active' if request.endpoint == 'admin.history' }}" href="{{ url_for('admin.history') }}"><span aria-hidden="true">◷</span> Request history</a>
+        {% if request.endpoint == 'admin.dashboard' %}
+        <div class="sidebar-section-label sidebar-queue-label">QUEUE SHORTCUTS</div>
+        <a class="sidebar-link sidebar-sub-link" href="#priority-lane"><span aria-hidden="true">●</span> Priority lane</a>
+        <a class="sidebar-link sidebar-sub-link" href="#regular-lane"><span aria-hidden="true">●</span> Regular queue</a>
+        {% endif %}
+        <div class="sidebar-spacer"></div>
+        <div class="sidebar-footnote">Completed and cancelled requests are in History.</div>
+    </aside>
+    {% endif %}
+
+<main class="container mt-4 mb-5 {{ 'admin-main-content' if is_admin_user else '' }}">
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            {% for category, message in messages %}
+                <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+                    {{ message }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+            {% endfor %}
+        {% endif %}
+    {% endwith %}
+
+    {% block content %}{% endblock %}
+</main>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+    (() => {
+        const themeToggle = document.getElementById('themeToggle');
+        const root = document.documentElement;
+        function syncThemeButton() {
+            const isDark = root.dataset.theme === 'dark';
+            themeToggle.setAttribute('aria-pressed', String(isDark));
+            themeToggle.setAttribute('aria-label', isDark ? 'Switch to light mode' : 'Switch to dark mode');
+            themeToggle.querySelector('.theme-toggle-icon').textContent = isDark ? '☀' : '☾';
+            themeToggle.querySelector('.theme-toggle-text').textContent = isDark ? 'Light mode' : 'Dark mode';
+        }
+        syncThemeButton();
+        themeToggle.addEventListener('click', () => {
+            const nextTheme = root.dataset.theme === 'dark' ? 'light' : 'dark';
+            root.dataset.theme = nextTheme;
+            try { localStorage.setItem('printease-theme', nextTheme); } catch (_) {}
+            syncThemeButton();
+        });
+
+        const intro = document.getElementById('printerIntro');
+        if (intro) {
+            const key = 'printease-intro-seen';
+            try {
+                if (sessionStorage.getItem(key)) intro.remove();
+                else {
+                    sessionStorage.setItem(key, '1');
+                    window.setTimeout(() => intro.classList.add('is-leaving'), 1900);
+                    window.setTimeout(() => intro.remove(), 2500);
+                }
+            } catch (_) {
+                window.setTimeout(() => intro.classList.add('is-leaving'), 1900);
+                window.setTimeout(() => intro.remove(), 2500);
+            }
+        }
+        document.querySelectorAll('[data-notification-collapse]').forEach(button => {
+            const panel = document.querySelector(button.getAttribute('data-bs-target'));
+            if (!panel) return;
+            panel.addEventListener('shown.bs.collapse', () => {
+                button.querySelector('.notification-toggle-label').textContent = 'Hide';
+                button.setAttribute('aria-label', 'Hide notifications');
+            });
+            panel.addEventListener('hidden.bs.collapse', () => {
+                button.querySelector('.notification-toggle-label').textContent = 'Show';
+                button.setAttribute('aria-label', 'Show notifications');
+            });
+        });
+        document.querySelectorAll('[data-password-toggle]').forEach(button => {
+            button.addEventListener('click', () => {
+                const input = document.getElementById(button.dataset.passwordToggle);
+                const showing = input.type === 'password';
+                input.type = showing ? 'text' : 'password';
+                button.textContent = showing ? 'Hide' : 'Show';
+                button.setAttribute('aria-label', showing ? 'Hide password' : 'Show password');
+            });
+        });
+    })();
+</script>
+{% block scripts %}{% endblock %}
+</body>
+</html>

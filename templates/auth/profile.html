@@ -1,0 +1,58 @@
+{% extends 'base.html' %}
+{% block title %}Profile Settings{% endblock %}
+{% block content %}
+<section class="profile-page">
+    <header class="profile-heading">
+        <span class="request-kicker">ACCOUNT SETTINGS</span>
+        <h1>Your profile</h1>
+        <p>Update your contact details and account password.</p>
+    </header>
+
+    <div class="card profile-card">
+        <form method="POST">
+            <div class="profile-section-heading">
+                <span class="admin-section-icon" aria-hidden="true">♙</span>
+                <div><h2>Personal details</h2><p>These details are used for your PrintEase account.</p></div>
+            </div>
+            <div class="card-body profile-form-grid">
+                <div>
+                    <label class="form-label" for="profile-name">Full name</label>
+                    <input class="form-control" id="profile-name" name="full_name" autocomplete="name"
+                           value="{{ form.get('full_name', current_user.full_name) }}" required>
+                </div>
+                <div>
+                    <label class="form-label" for="profile-email">Email address</label>
+                    <input class="form-control" id="profile-email" name="email" type="email" autocomplete="email"
+                           value="{{ form.get('email', current_user.email) }}" required>
+                </div>
+                <div>
+                    <label class="form-label" for="profile-phone">Phone number</label>
+                    <input class="form-control" id="profile-phone" name="phone_number" type="tel" autocomplete="tel"
+                           value="{{ form.get('phone_number', current_user.phone_number or '') }}">
+                </div>
+            </div>
+
+            <div class="profile-section-heading profile-password-heading">
+                <span class="admin-section-icon" aria-hidden="true">⌑</span>
+                <div><h2>Change password</h2><p>Leave these fields blank if you want to keep your current password.</p></div>
+            </div>
+            <div class="card-body profile-form-grid profile-password-grid">
+                <div>
+                    <label class="form-label" for="current-password">Current password</label>
+                    <input class="form-control" id="current-password" name="current_password" type="password" autocomplete="current-password">
+                </div>
+                <div>
+                    <label class="form-label" for="new-password">New password</label>
+                    <input class="form-control" id="new-password" name="new_password" type="password" autocomplete="new-password" minlength="8">
+                </div>
+                <div>
+                    <label class="form-label" for="confirm-password">Confirm new password</label>
+                    <input class="form-control" id="confirm-password" name="confirm_password" type="password" autocomplete="new-password" minlength="8">
+                </div>
+            </div>
+
+            <div class="profile-actions"><small>Password changes require your current password.</small><button class="btn btn-primary" type="submit">Save profile <span aria-hidden="true">→</span></button></div>
+        </form>
+    </div>
+</section>
+{% endblock %}

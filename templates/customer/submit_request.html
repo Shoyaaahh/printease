@@ -1,0 +1,179 @@
+{% extends 'base.html' %}
+{% block title %}New Print Request{% endblock %}
+{% block content %}
+<div class="row justify-content-center submit-request-page">
+    <div class="col-lg-9 col-xl-8">
+        <div class="card shadow-sm request-form-card">
+            <div class="request-form-banner">
+                <span class="request-form-icon" aria-hidden="true">✦</span>
+                <div><span class="request-kicker">LET’S GET IT PRINTED</span><h1 class="card-title">Start a new request</h1><p>Choose a service, add your file, and tell us what you need.</p></div>
+                <span class="request-form-step">01 <small>/ 03</small></span>
+            </div>
+            <div class="card-body p-4 p-lg-5">
+                <form method="POST" enctype="multipart/form-data">
+
+                    <div class="mb-4">
+                        <label class="form-label fw-semibold" for="service_type">What do you want printed?</label>
+                        <select name="service_type" id="service_type" class="form-select" required>
+                            <option value="" disabled {{ 'selected' if not form.get('service_type') }}>Choose a service...</option>
+                            {% for key, label in service_types.items() %}
+                            <option value="{{ key }}" {{ 'selected' if form.get('service_type') == key }}>{{ label }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <div class="mb-3 upload-field">
+                        <label class="form-label" for="design_file">Upload your file</label>
+                        <input type="file" name="design_file" id="design_file" class="form-control" accept=".pdf,.jpg,.jpeg,.png,.docx,.pptx,.ai,.psd,.svg" required>
+                        <div class="form-text" id="file_feedback" aria-live="polite">Choose a file from your device to get started.</div>
+                        <div class="form-text">Accepted: PDF, JPG, PNG, DOCX, PPTX, AI, PSD, SVG (max 20MB).</div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">Number of Copies</label>
+                        <input type="number" name="copies" class="form-control" min="1" value="{{ form.get('copies', 1) }}" required>
+                    </div>
+
+                    <!-- Document print fields -->
+                    <div class="service-fields border rounded p-3 mb-3" data-service="document_print">
+                        <h6 class="text-muted">Document / Paper Print details</h6>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Paper Size</label>
+                                <select name="paper_size" class="form-select">
+                                    <option value="" disabled {{ 'selected' if not form.get('paper_size') }}>Choose...</option>
+                                    {% for size in paper_sizes %}
+                                    <option value="{{ size }}" {{ 'selected' if form.get('paper_size') == size }}>{{ size }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Number of Pages</label>
+                                <input type="number" name="page_count" class="form-control" min="1" value="{{ form.get('page_count', '') }}">
+                            </div>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" name="is_colored" id="is_colored" {{ 'checked' if form.get('is_colored') == 'on' }}>
+                            <label class="form-check-label" for="is_colored">Colored print (unchecked = black &amp; white)</label>
+                        </div>
+                    </div>
+
+                    <!-- Tarpaulin fields -->
+                    <div class="service-fields border rounded p-3 mb-3 d-none" data-service="tarpaulin">
+                        <h6 class="text-muted">Tarpaulin details</h6>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Width (ft)</label>
+                                <input type="number" step="0.1" name="width_ft" class="form-control" value="{{ form.get('width_ft', '') }}">
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Height (ft)</label>
+                                <input type="number" step="0.1" name="height_ft" class="form-control" value="{{ form.get('height_ft', '') }}">
+                            </div>
+                        </div>
+                        <div class="form-text">Tarpaulins are always printed in full color.</div>
+                    </div>
+
+                    <!-- Shirt print fields -->
+                    <div class="service-fields border rounded p-3 mb-3 d-none" data-service="shirt_print">
+                        <h6 class="text-muted">Shirt Printing details</h6>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Shirt Size</label>
+                                <select name="shirt_size" class="form-select">
+                                    <option value="" disabled {{ 'selected' if not form.get('shirt_size') }}>Choose...</option>
+                                    {% for size in shirt_sizes %}
+                                    <option value="{{ size }}" {{ 'selected' if form.get('shirt_size') == size }}>{{ size }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Shirt Color</label>
+                                <input type="text" name="shirt_color" class="form-control" placeholder="e.g. White" value="{{ form.get('shirt_color', '') }}">
+                            </div>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" name="is_colored" {{ 'checked' if form.get('is_colored') == 'on' }}>
+                            <label class="form-check-label">Full-color design (unchecked = single-color print)</label>
+                        </div>
+                    </div>
+
+                    <!-- Soft bind fields -->
+                    <div class="service-fields border rounded p-3 mb-3 d-none" data-service="soft_bind">
+                        <h6 class="text-muted">Soft Bind details</h6>
+                        {% include 'customer/_bind_fields.html' %}
+                    </div>
+
+                    <!-- Hard bind fields -->
+                    <div class="service-fields border rounded p-3 mb-3 d-none" data-service="hard_bind">
+                        <h6 class="text-muted">Hard Bind details</h6>
+                        {% include 'customer/_bind_fields.html' %}
+                    </div>
+
+                    <!-- Laminate fields -->
+                    <div class="service-fields border rounded p-3 mb-3 d-none" data-service="laminate">
+                        <h6 class="text-muted">Laminate details</h6>
+                        <div class="mb-3">
+                            <label class="form-label">Paper Size</label>
+                            <select name="paper_size" class="form-select">
+                                <option value="" disabled {{ 'selected' if not form.get('paper_size') }}>Choose...</option>
+                                {% for size in paper_sizes %}
+                                <option value="{{ size }}" {{ 'selected' if form.get('paper_size') == size }}>{{ size }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="form-check mb-3">
+                        <input class="form-check-input" type="checkbox" name="is_urgent" id="is_urgent" {{ 'checked' if form.get('is_urgent') == 'on' }}>
+                        <label class="form-check-label" for="is_urgent">This is urgent — put me in the priority lane (+20% rush fee)</label>
+                    </div>
+
+                    <div class="alert alert-light border small">
+                        The exact price will be shown after you submit. It's an estimate — the shop confirms
+                        the final price when they accept your request.
+                    </div>
+
+                    <button type="submit" class="btn btn-primary w-100">Submit Request</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+{% block scripts %}<script>
+    const serviceSelect = document.getElementById('service_type');
+    const sections = document.querySelectorAll('.service-fields');
+
+    // Fields (paper_size, is_colored, page_count) are duplicated across a few
+    // sections since several services share them. Only the fields inside the
+    // currently-visible section should be enabled, so only those values are
+    // submitted and required-field checks only apply to what's shown.
+    function updateSections() {
+        const val = serviceSelect.value;
+        sections.forEach(sec => {
+            const visible = sec.dataset.service === val;
+            sec.classList.toggle('d-none', !visible);
+            sec.querySelectorAll('input, select').forEach(el => {
+                el.disabled = !visible;
+            });
+        });
+    }
+    serviceSelect.addEventListener('change', updateSections);
+    updateSections();
+
+    const fileInput = document.getElementById('design_file');
+    const fileFeedback = document.getElementById('file_feedback');
+    fileInput.addEventListener('change', () => {
+        const file = fileInput.files[0];
+        if (!file) {
+            fileFeedback.textContent = 'Choose a file from your device to get started.';
+            return;
+        }
+        const size = file.size / (1024 * 1024);
+        fileFeedback.textContent = `${file.name} · ${size < 1 ? `${Math.max(1, Math.round(size * 1024))} KB` : `${size.toFixed(1)} MB`}`;
+        fileFeedback.classList.toggle('text-danger', size > 20);
+        if (size > 20) fileFeedback.textContent += ' — this file is over the 20 MB limit.';
+    });
+</script>
+{% endblock %}

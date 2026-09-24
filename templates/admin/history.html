@@ -1,0 +1,32 @@
+{% extends 'base.html' %}
+{% block title %}Order History{% endblock %}
+{% block content %}
+<a href="{{ url_for('admin.dashboard') }}" class="request-back mb-3 d-inline-flex">&larr; Back to Dashboard</a>
+<header class="history-title"><div><div class="request-kicker">ADMIN WORKSPACE</div><h1>Order history</h1><p>Find and review customer print requests.</p></div><div class="history-result-pill"><span>▤</span>{{ results|length }} <small>matching {{ 'request' if results|length == 1 else 'requests' }}</small></div></header>
+
+<section class="card history-filter-card">
+    <div class="filter-card-heading"><span class="admin-section-icon">⌕</span><div><h2>Find a request</h2><p>Combine filters to narrow your results</p></div></div>
+    <div class="card-body"><form method="GET" class="history-filter-form">
+        <div class="history-filter-field filter-customer"><label class="form-label" for="history-q">Customer</label><input id="history-q" type="search" name="q" class="form-control" value="{{ filters.get('q', '') }}" placeholder="Name or email"></div>
+        <div class="history-filter-field"><label class="form-label" for="history-status">Status</label><select id="history-status" name="status" class="form-select"><option value="">All statuses</option>{% for s in statuses %}<option value="{{ s }}" {{ 'selected' if filters.get('status') == s }}>{{ s.replace('_', ' ')|title }}</option>{% endfor %}</select></div>
+        <div class="history-filter-field"><label class="form-label" for="history-service">Service</label><select id="history-service" name="service_type" class="form-select"><option value="">All services</option>{% for key, label in service_types.items() %}<option value="{{ key }}" {{ 'selected' if filters.get('service_type') == key }}>{{ label }}</option>{% endfor %}</select></div>
+        <div class="history-filter-field"><label class="form-label" for="history-from">Submitted after</label><input id="history-from" type="date" name="date_from" class="form-control" value="{{ filters.get('date_from', '') }}"></div>
+        <div class="history-filter-field"><label class="form-label" for="history-to">Submitted before</label><input id="history-to" type="date" name="date_to" class="form-control" value="{{ filters.get('date_to', '') }}"></div>
+        <div class="history-filter-actions"><button type="submit" class="btn btn-primary">Apply filters <span aria-hidden="true">→</span></button>{% if filters.get('q') or filters.get('status') or filters.get('service_type') or filters.get('date_from') or filters.get('date_to') %}<a href="{{ url_for('admin.history') }}" class="clear-filters">Clear</a>{% endif %}</div>
+    </form></div>
+</section>
+
+<section class="history-results-section">
+    <div class="history-results-heading"><div><h2>Requests</h2><p>Most recent requests appear first.</p></div></div>
+    <div class="table-responsive history-table-wrap"><table class="table table-hover align-middle bg-white history-table">
+        <thead><tr><th>Request</th><th>Customer</th><th>Service</th><th>Specs</th><th>Est. price</th><th>Submitted</th><th>Completion</th><th>Status</th><th><span class="visually-hidden">Action</span></th></tr></thead>
+        <tbody>{% for r in results %}<tr>
+            <td><span class="history-id">#{{ r.id }}</span></td>
+            <td><strong class="history-customer">{{ r.customer.full_name }}</strong><small class="history-email">{{ r.customer.email }}</small></td>
+            <td>{{ r.service_type_label }}</td><td>{{ r.display_specs }}</td><td class="history-price">{{ r.formatted_price }}</td>
+            <td>{{ r.submitted_at.strftime('%b %d, %Y') }}</td><td>{{ r.completion_date.strftime('%b %d, %Y') if r.completion_date else '—' }}</td>
+            <td><span class="badge bg-{{ r.status_badge }}">{{ r.status_label }}</span></td><td><a href="{{ url_for('admin.request_detail', request_id=r.id) }}" class="btn btn-sm btn-outline-primary">Review <span aria-hidden="true">→</span></a></td>
+        </tr>{% else %}<tr><td colspan="9"><div class="history-empty"><span>⌕</span><strong>No matching requests</strong><small>Try changing or clearing your filters.</small></div></td></tr>{% endfor %}</tbody>
+    </table></div>
+</section>
+{% endblock %}

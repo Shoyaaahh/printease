@@ -1,0 +1,68 @@
+{% extends 'base.html' %}
+{% block title %}Admin Dashboard{% endblock %}
+
+{% macro request_table(requests) %}
+<div class="table-responsive">
+    <table class="table table-hover align-middle bg-white">
+        <thead class="table-light">
+            <tr>
+                <th>#</th>
+                <th>Customer</th>
+                <th>Type</th>
+                <th>Service</th>
+                <th>File</th>
+                <th>Copies</th>
+                <th>Specs</th>
+                <th>Est. Price</th>
+                <th>Submitted</th>
+                <th>Status</th>
+                <th></th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for r in requests %}
+            <tr>
+                <td>#{{ r.id }}</td>
+                <td>{{ r.customer.full_name }}</td>
+                <td>
+                    {% if r.customer.customer_type == 'student' %}
+                        <span class="badge bg-info text-dark">Student ({{ r.customer.student_id }})</span>
+                    {% else %}
+                        Normal
+                    {% endif %}
+                    {% if r.is_urgent %}<span class="badge bg-warning text-dark">Urgent</span>{% endif %}
+                </td>
+                <td>{{ r.service_type_label }}</td>
+                <td>{{ r.original_filename }}</td>
+                <td>{{ r.copies }}</td>
+                <td>{{ r.display_specs }}</td>
+                <td>{{ r.formatted_price }}</td>
+                <td>{{ r.submitted_at.strftime('%b %d, %I:%M %p') }}</td>
+                <td><span class="badge bg-{{ r.status_badge }}">{{ r.status_label }}</span></td>
+                <td><a href="{{ url_for('admin.request_detail', request_id=r.id) }}" class="btn btn-sm btn-outline-primary">Review</a></td>
+            </tr>
+            {% else %}
+            <tr><td colspan="11" class="text-center text-muted py-4">Nothing here.</td></tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endmacro %}
+
+{% block content %}
+<header class="admin-dashboard-heading"><div><div class="request-kicker">PRINT OPERATIONS</div><h1>Admin dashboard</h1><p>Your print queue at a glance.</p></div><a href="{{ url_for('admin.history') }}" class="btn btn-outline-primary">Search order history <span aria-hidden="true">→</span></a></header>
+
+<div class="admin-stat-grid">
+    <div class="admin-stat-card"><span class="admin-stat-icon stat-purple">◷</span><div><small>Priority lane</small><strong>{{ priority_lane|length }}</strong><span>requests to prioritize</span></div></div>
+    <div class="admin-stat-card"><span class="admin-stat-icon stat-blue">▤</span><div><small>Regular queue</small><strong>{{ regular_lane|length }}</strong><span>active requests</span></div></div>
+    <div class="admin-stat-card"><span class="admin-stat-icon stat-green">✓</span><div><small>Active requests</small><strong>{{ active_total }}</strong><span>currently needing attention</span></div></div>
+</div>
+
+<div class="admin-queue-section" id="priority-lane"><div class="admin-queue-heading"><div><span class="queue-dot priority-dot"></span><div><h2>Priority lane</h2><p>Students and urgent requests</p></div></div><span class="notes-count">{{ priority_lane|length }} waiting</span></div>
+{{ request_table(priority_lane) }}
+</div>
+
+<div class="admin-queue-section" id="regular-lane"><div class="admin-queue-heading"><div><span class="queue-dot regular-dot"></span><div><h2>Regular queue</h2><p>Requests waiting to be processed</p></div></div><span class="notes-count">{{ regular_lane|length }} waiting</span></div>
+{{ request_table(regular_lane) }}
+</div>
+{% endblock %}

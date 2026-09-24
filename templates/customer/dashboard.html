@@ -1,0 +1,128 @@
+{% extends 'base.html' %}
+{% block title %}My Requests{% endblock %}
+{% block content %}
+<header class="customer-dashboard-hero">
+    <div class="customer-hero-orbit" aria-hidden="true">✦</div>
+    <div class="customer-hero-copy"><span class="request-kicker">YOUR PRINT STUDIO</span><h1>Make it, print it.</h1><p>Keep every order and update together in one place.</p></div>
+    <a href="{{ url_for('customer.submit_request') }}" class="btn btn-light customer-new-request"><span aria-hidden="true">＋</span> Start a print request</a>
+</header>
+
+{% if notifications %}
+<div class="card mb-4 customer-notifications-card">
+    <div class="card-header d-flex justify-content-between align-items-center">
+        <div class="notification-heading"><span class="notification-bell" aria-hidden="true">🔔</span><div><strong>Notifications</strong><small>{{ notifications|length }} recent updates</small></div></div>
+        <div class="notification-actions">
+            {% if notifications|selectattr('is_read', 'equalto', false)|list %}
+            <form method="POST" action="{{ url_for('customer.mark_notifications_read') }}">
+                <button class="btn btn-sm btn-outline-secondary" type="submit"><span aria-hidden="true">✓</span> Mark read</button>
+            </form>
+            {% endif %}
+            <button class="notification-collapse-button" type="button" data-bs-toggle="collapse" data-bs-target="#customerNotificationsList" data-notification-collapse aria-expanded="false" aria-controls="customerNotificationsList" aria-label="Show notifications">
+                <span class="notification-toggle-label">Show</span><span class="notification-chevron" aria-hidden="true">⌄</span>
+            </button>
+        </div>
+    </div>
+    <div class="collapse" id="customerNotificationsList">
+    <ul class="list-group list-group-flush">
+        {% for n in notifications %}
+        <li class="list-group-item {{ 'fw-semibold' if not n.is_read else 'text-muted' }}">
+            {{ n.message }}
+            <span class="text-muted small d-block">{{ n.created_at.strftime('%b %d, %Y %I:%M %p') }}</span>
+        </li>
+        {% endfor %}
+    </ul>
+    </div>
+</div>
+{% endif %}
+
+<section class="card customer-filter-card">
+    <form method="GET" class="customer-filter-form">
+        <div class="customer-filter-search">
+            <label class="form-label" for="request-search">Find a request</label>
+            <input class="form-control" id="request-search" type="search" name="q"
+                   value="{{ filters.get('q', '') }}" placeholder="Search by file name or request number">
+        </div>
+        <div>
+            <label class="form-label" for="request-status">Status</label>
+            <select class="form-select" id="request-status" name="status">
+                <option value="">All statuses</option>
+                {% for status in statuses %}
+                <option value="{{ status }}" {{ 'selected' if filters.get('status') == status }}>
+                    {{ {'pending': 'Pending review', 'in_queue': 'On queue', 'completed': 'Completed', 'cancelled': 'Cancelled'}[status] }}
+                </option>
+                {% endfor %}
+            </select>
+        </div>
+        <div>
+            <label class="form-label" for="request-service">Service</label>
+            <select class="form-select" id="request-service" name="service_type">
+                <option value="">All services</option>
+                {% for key, label in service_types.items() %}
+                <option value="{{ key }}" {{ 'selected' if filters.get('service_type') == key }}>{{ label }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="customer-filter-actions">
+            <button class="btn btn-primary" type="submit">Search <span aria-hidden="true">⌕</span></button>
+            {% if has_filters %}<a class="customer-clear-filter" href="{{ url_for('customer.dashboard') }}">Clear</a>{% endif %}
+        </div>
+    </form>
+</section>
+
+{% if requests %}
+<div class="table-responsive">
+    <table class="table table-hover align-middle bg-white customer-requests-table">
+        <thead class="table-light">
+            <tr>
+                <th>#</th>
+                <th>Service</th>
+                <th>File</th>
+                <th>Copies</th>
+                <th>Specs</th>
+                <th>Priority</th>
+                <th>Est. Price</th>
+                <th>Status</th>
+                <th>Est. Completion</th>
+                <th></th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for r in requests %}
+            <tr>
+                <td>#{{ r.id }}</td>
+                <td>{{ r.service_type_label }}</td>
+                <td>{{ r.original_filename }}</td>
+                <td>{{ r.copies }}</td>
+                <td>{{ r.display_specs }}</td>
+                <td>
+                    {% if r.is_priority %}<span class="badge bg-warning text-dark">Priority</span>{% else %}—{% endif %}
+                </td>
+                <td>{{ r.formatted_price }}</td>
+                <td><span class="badge bg-{{ r.status_badge }}">{{ r.status_label }}</span></td>
+                <td>{{ r.completion_date.strftime('%b %d, %Y') if r.completion_date else '—' }}</td>
+                <td><a href="{{ url_for('customer.request_detail', request_id=r.id) }}" class="btn btn-sm btn-outline-primary">View</a></td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% else %}
+{% if has_filters %}
+<div class="customer-empty-state filtered-empty-state">
+    <span class="empty-print-icon" aria-hidden="true">⌕</span>
+    <span class="request-kicker">NO MATCHES</span>
+    <h2>No requests found</h2>
+    <p>Try another file name or change the status and service filters.</p>
+    <a href="{{ url_for('customer.dashboard') }}" class="btn btn-primary mt-2">Clear filters</a>
+</div>
+{% else %}
+<div class="customer-empty-state">
+    <span class="empty-print-icon" aria-hidden="true">✧</span>
+    <span class="request-kicker">A FRESH PAGE</span>
+    <h2>Your print queue is ready</h2>
+    <p>Start with a file and your print details. We’ll keep the progress here.</p>
+    <a href="{{ url_for('customer.submit_request') }}" class="btn btn-primary mt-2">Submit your first request <span aria-hidden="true">→</span></a>
+</div>
+{% endif %}
+{% endif %}
+{% endblock %}
