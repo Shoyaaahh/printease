@@ -9,4 +9,5 @@ Werkzeug==3.0.3
 # of a thumbnail; everything else still works.
 # PyMuPDF==1.24.9
 
-requests==2.32.3
+# Optional - only needed if you wire up real SMS sending (see notifications.py).
+# requests==2.32.3
