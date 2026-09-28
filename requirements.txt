@@ -11,3 +11,4 @@ Werkzeug==3.0.3
 
 # Optional - only needed if you wire up real SMS sending (see notifications.py).
 # requests==2.32.3
+gunicorn
