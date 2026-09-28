@@ -22,6 +22,6 @@ class Config:
     MAIL_PASSWORD = os.environ.get('MAIL_PASSWORD', '')
     MAIL_DEFAULT_SENDER = os.environ.get('MAIL_DEFAULT_SENDER', 'no-reply@printease.local')
 
-    # --- SMS notifications (optional, provider not wired in) ---
-    # See notifications.py for how to plug in a provider like Semaphore/Twilio.
+    # --- Semaphore SMS notifications (optional) ---
     SEMAPHORE_API_KEY = os.environ.get('SEMAPHORE_API_KEY', '')
+    SEMAPHORE_SENDERNAME = os.environ.get('SEMAPHORE_SENDERNAME', '')

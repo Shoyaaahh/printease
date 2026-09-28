@@ -8,7 +8,8 @@
 </header>
 
 {% if notifications %}
-<div class="card mb-4 customer-notifications-card">
+{% set has_unread_notifications = notifications|selectattr('is_read', 'equalto', false)|list %}
+<div class="card mb-4 customer-notifications-card{{ ' has-unread' if has_unread_notifications else '' }}">
     <div class="card-header d-flex justify-content-between align-items-center">
         <div class="notification-heading"><span class="notification-bell" aria-hidden="true">🔔</span><div><strong>Notifications</strong><small>{{ notifications|length }} recent updates</small></div></div>
         <div class="notification-actions">
@@ -17,12 +18,12 @@
                 <button class="btn btn-sm btn-outline-secondary" type="submit"><span aria-hidden="true">✓</span> Mark read</button>
             </form>
             {% endif %}
-            <button class="notification-collapse-button" type="button" data-bs-toggle="collapse" data-bs-target="#customerNotificationsList" data-notification-collapse aria-expanded="false" aria-controls="customerNotificationsList" aria-label="Show notifications">
-                <span class="notification-toggle-label">Show</span><span class="notification-chevron" aria-hidden="true">⌄</span>
+            <button class="notification-collapse-button" type="button" data-bs-toggle="collapse" data-bs-target="#customerNotificationsList" data-notification-collapse aria-expanded="{{ 'true' if has_unread_notifications else 'false' }}" aria-controls="customerNotificationsList" aria-label="{{ 'Hide notifications' if has_unread_notifications else 'Show notifications' }}">
+                <span class="notification-toggle-label">{{ 'Hide' if has_unread_notifications else 'Show' }}</span><span class="notification-chevron" aria-hidden="true">⌄</span>
             </button>
         </div>
     </div>
-    <div class="collapse" id="customerNotificationsList">
+    <div class="collapse{{ ' show' if has_unread_notifications else '' }}" id="customerNotificationsList">
     <ul class="list-group list-group-flush">
         {% for n in notifications %}
         <li class="list-group-item {{ 'fw-semibold' if not n.is_read else 'text-muted' }}">
@@ -100,7 +101,7 @@
                 <td>{{ r.formatted_price }}</td>
                 <td><span class="badge bg-{{ r.status_badge }}">{{ r.status_label }}</span></td>
                 <td>{{ r.completion_date.strftime('%b %d, %Y') if r.completion_date else '—' }}</td>
-                <td><a href="{{ url_for('customer.request_detail', request_id=r.id) }}" class="btn btn-sm btn-outline-primary">View</a></td>
+                <td><a href="{{ url_for('customer.request_detail', request_id=r.id) }}" class="btn btn-sm btn-outline-primary"><span aria-hidden="true">↗</span> View</a></td>
             </tr>
             {% endfor %}
         </tbody>
@@ -113,7 +114,7 @@
     <span class="request-kicker">NO MATCHES</span>
     <h2>No requests found</h2>
     <p>Try another file name or change the status and service filters.</p>
-    <a href="{{ url_for('customer.dashboard') }}" class="btn btn-primary mt-2">Clear filters</a>
+    <a href="{{ url_for('customer.dashboard') }}" class="btn btn-primary mt-2"><span aria-hidden="true">×</span> Clear filters</a>
 </div>
 {% else %}
 <div class="customer-empty-state">

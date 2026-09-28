@@ -24,7 +24,7 @@ def signup():
         phone_number = request.form.get('phone_number', '').strip()
         password = request.form.get('password', '')
         confirm_password = request.form.get('confirm_password', '')
-        customer_type = request.form.get('customer_type', 'normal')
+        customer_type = (request.form.get('customer_type', 'normal') or 'normal').strip().lower()
         student_id = request.form.get('student_id', '').strip()
 
         errors = []

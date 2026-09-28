@@ -49,7 +49,7 @@
                             </div>
                             <div class="col-md-6 mb-3">
                                 <label class="form-label">Number of Pages</label>
-                                <input type="number" name="page_count" class="form-control" min="1" value="{{ form.get('page_count', '') }}">
+                                <input type="number" name="page_count" class="form-control" min="1" value="{{ form.get('page_count', '') }}" required>
                             </div>
                         </div>
                         <div class="form-check">
@@ -64,11 +64,11 @@
                         <div class="row">
                             <div class="col-md-6 mb-3">
                                 <label class="form-label">Width (ft)</label>
-                                <input type="number" step="0.1" name="width_ft" class="form-control" value="{{ form.get('width_ft', '') }}">
+                                <input type="number" step="0.1" name="width_ft" class="form-control" value="{{ form.get('width_ft', '') }}" required>
                             </div>
                             <div class="col-md-6 mb-3">
                                 <label class="form-label">Height (ft)</label>
-                                <input type="number" step="0.1" name="height_ft" class="form-control" value="{{ form.get('height_ft', '') }}">
+                                <input type="number" step="0.1" name="height_ft" class="form-control" value="{{ form.get('height_ft', '') }}" required>
                             </div>
                         </div>
                         <div class="form-text">Tarpaulins are always printed in full color.</div>
@@ -80,7 +80,7 @@
                         <div class="row">
                             <div class="col-md-6 mb-3">
                                 <label class="form-label">Shirt Size</label>
-                                <select name="shirt_size" class="form-select">
+                                <select name="shirt_size" class="form-select" required>
                                     <option value="" disabled {{ 'selected' if not form.get('shirt_size') }}>Choose...</option>
                                     {% for size in shirt_sizes %}
                                     <option value="{{ size }}" {{ 'selected' if form.get('shirt_size') == size }}>{{ size }}</option>
@@ -89,7 +89,7 @@
                             </div>
                             <div class="col-md-6 mb-3">
                                 <label class="form-label">Shirt Color</label>
-                                <input type="text" name="shirt_color" class="form-control" placeholder="e.g. White" value="{{ form.get('shirt_color', '') }}">
+                                <input type="text" name="shirt_color" class="form-control" placeholder="e.g. White" value="{{ form.get('shirt_color', '') }}" required>
                             </div>
                         </div>
                         <div class="form-check">
@@ -115,7 +115,7 @@
                         <h6 class="text-muted">Laminate details</h6>
                         <div class="mb-3">
                             <label class="form-label">Paper Size</label>
-                            <select name="paper_size" class="form-select">
+                                <select name="paper_size" class="form-select" required>
                                 <option value="" disabled {{ 'selected' if not form.get('paper_size') }}>Choose...</option>
                                 {% for size in paper_sizes %}
                                 <option value="{{ size }}" {{ 'selected' if form.get('paper_size') == size }}>{{ size }}</option>
@@ -124,17 +124,22 @@
                         </div>
                     </div>
 
-                    <div class="form-check mb-3">
+                    {% if current_user.customer_type != 'student' %}<div class="form-check mb-3">
                         <input class="form-check-input" type="checkbox" name="is_urgent" id="is_urgent" {{ 'checked' if form.get('is_urgent') == 'on' }}>
                         <label class="form-check-label" for="is_urgent">This is urgent — put me in the priority lane (+20% rush fee)</label>
-                    </div>
+                    </div>{% endif %}
 
                     <div class="alert alert-light border small">
                         The exact price will be shown after you submit. It's an estimate — the shop confirms
                         the final price when they accept your request.
                     </div>
 
-                    <button type="submit" class="btn btn-primary w-100">Submit Request</button>
+                    <aside class="request-estimate" id="request-estimate" aria-live="polite">
+                        <div><span class="request-estimate-label">LIVE ESTIMATE</span><strong id="estimate-total">--</strong></div>
+                        <p id="estimate-summary">Choose a service and complete its details to see an estimate.</p>
+                    </aside>
+
+                    <button type="submit" class="btn btn-primary w-100" id="submit-request-button"><span aria-hidden="true">↑</span> Submit Request</button>
                 </form>
             </div>
         </div>
@@ -164,6 +169,91 @@
 
     const fileInput = document.getElementById('design_file');
     const fileFeedback = document.getElementById('file_feedback');
+    const estimateTotal = document.getElementById('estimate-total');
+    const estimateSummary = document.getElementById('estimate-summary');
+    const serviceLabels = {{ service_types|tojson }};
+    const pricing = {{ pricing|tojson }};
+    const currencySymbol = {{ currency_symbol|tojson }};
+    const urgentSurchargeRate = {{ urgent_surcharge_rate|tojson }};
+
+    function getVisibleValue(name) {
+        const field = document.querySelector(`.service-fields:not(.d-none) [name="${name}"]:not(:disabled)`);
+        return field ? field.value : '';
+    }
+
+    function updateEstimate() {
+        const serviceType = serviceSelect.value;
+        const copies = Math.max(parseInt(document.querySelector('[name="copies"]').value, 10) || 0, 0);
+        const pageCount = Math.max(parseInt(getVisibleValue('page_count'), 10) || 0, 0);
+        const width = parseFloat(getVisibleValue('width_ft')) || 0;
+        const height = parseFloat(getVisibleValue('height_ft')) || 0;
+        const isColored = Boolean(document.querySelector('[name="is_colored"]:not(:disabled):checked'));
+        const urgentField = document.getElementById('is_urgent');
+        const isUrgent = urgentField ? urgentField.checked : false;
+        let basePrice = 0;
+        let summary = '';
+        let complete = Boolean(serviceType && copies > 0);
+
+        if (serviceType === 'document_print') {
+            complete = complete && Boolean(getVisibleValue('paper_size')) && pageCount > 0;
+            basePrice = (isColored ? pricing.document_print.color_per_page : pricing.document_print.bw_per_page) * pageCount * copies;
+            summary = `${copies} ${copies === 1 ? 'copy' : 'copies'} · ${pageCount} ${pageCount === 1 ? 'page' : 'pages'} · ${isColored ? 'color' : 'black & white'}`;
+        } else if (serviceType === 'tarpaulin') {
+            complete = complete && width > 0 && height > 0;
+            basePrice = Math.max(width * height * pricing.tarpaulin.per_sqft, pricing.tarpaulin.min_charge) * copies;
+            summary = `${copies} ${copies === 1 ? 'sign' : 'signs'} · ${width || 0} × ${height || 0} ft`;
+        } else if (serviceType === 'shirt_print') {
+            complete = complete && Boolean(getVisibleValue('shirt_size'));
+            basePrice = pricing.shirt_print.per_shirt * copies;
+            summary = `${copies} ${copies === 1 ? 'shirt' : 'shirts'} · ${getVisibleValue('shirt_size') || 'size pending'}`;
+        } else if (serviceType === 'soft_bind' || serviceType === 'hard_bind') {
+            complete = complete && Boolean(getVisibleValue('paper_size')) && pageCount > 0;
+            const rules = pricing[serviceType];
+            basePrice = (rules.base_fee + rules.per_page * pageCount) * copies;
+            summary = `${copies} ${copies === 1 ? 'bound copy' : 'bound copies'} · ${pageCount} ${pageCount === 1 ? 'page' : 'pages'}`;
+        } else if (serviceType === 'laminate') {
+            complete = complete && Boolean(getVisibleValue('paper_size'));
+            basePrice = pricing.laminate.per_sheet * copies;
+            summary = `${copies} ${copies === 1 ? 'sheet' : 'sheets'} · laminate finish`;
+        } else {
+            summary = 'Choose a service and complete its details to see an estimate.';
+        }
+
+        if (!complete) {
+            estimateTotal.textContent = '--';
+            estimateSummary.textContent = serviceType ? 'Complete the service details to see an estimate.' : summary;
+            return;
+        }
+
+        const total = basePrice * (isUrgent ? 1 + urgentSurchargeRate : 1);
+        estimateTotal.textContent = `${currencySymbol}${total.toFixed(2)}`;
+        estimateSummary.textContent = `${serviceLabels[serviceType]} · ${summary}${isUrgent ? ' · rush fee included' : ''}`;
+    }
+
+    document.querySelectorAll('#service_type, [name="copies"], #is_urgent, .service-fields input, .service-fields select').forEach(field => {
+        field.addEventListener('input', updateEstimate);
+        field.addEventListener('change', updateEstimate);
+    });
+    updateEstimate();
+    const requestForm = document.querySelector('.submit-request-page form');
+    const submitButton = document.getElementById('submit-request-button');
+    requestForm.addEventListener('submit', event => {
+        const file = fileInput.files[0];
+        if (file && file.size > 20 * 1024 * 1024) {
+            event.preventDefault();
+            fileFeedback.textContent = 'Please choose a file smaller than 20 MB.';
+            fileFeedback.classList.add('text-danger');
+            fileInput.focus();
+            return;
+        }
+        if (submitButton.dataset.submitting === 'true') {
+            event.preventDefault();
+            return;
+        }
+        submitButton.dataset.submitting = 'true';
+        submitButton.disabled = true;
+        submitButton.textContent = 'Submitting...';
+    });
     fileInput.addEventListener('change', () => {
         const file = fileInput.files[0];
         if (!file) {

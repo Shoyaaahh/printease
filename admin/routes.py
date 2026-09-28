@@ -9,7 +9,7 @@ from flask_login import current_user
 
 from extensions import db
 from models import PrintRequest, User
-from pricing import SERVICE_TYPES, PAPER_SIZES, SHIRT_SIZES, calculate_price
+from pricing import SERVICE_TYPES, PAPER_SIZES, SHIRT_SIZES, CURRENCY_SYMBOL, calculate_price
 from notifications import notify_customer
 
 admin_bp = Blueprint('admin', __name__, url_prefix='/admin')
@@ -27,6 +27,15 @@ def require_admin():
 
 @admin_bp.route('/dashboard')
 def dashboard():
+    now = datetime.utcnow()
+    month_start = now.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
+    sales_total = db.session.query(db.func.coalesce(db.func.sum(PrintRequest.estimated_price), 0)).filter(
+        PrintRequest.status == 'completed'
+    ).scalar()
+    sales_month = db.session.query(db.func.coalesce(db.func.sum(PrintRequest.estimated_price), 0)).filter(
+        PrintRequest.status == 'completed',
+        PrintRequest.completion_date >= month_start,
+    ).scalar()
     active_requests = (
         PrintRequest.query.filter(PrintRequest.status.in_(['pending', 'in_queue']))
         .order_by(PrintRequest.submitted_at.asc())
@@ -39,6 +48,9 @@ def dashboard():
         priority_lane=priority_lane,
         regular_lane=regular_lane,
         active_total=len(active_requests),
+        sales_total=sales_total,
+        sales_month=sales_month,
+        currency_symbol=CURRENCY_SYMBOL,
     )
 
 
@@ -47,8 +59,8 @@ def history():
     query = PrintRequest.query.join(User, PrintRequest.customer_id == User.id)
 
     q = request.args.get('q', '').strip()
-    status = request.args.get('status', '').strip()
-    service_type = request.args.get('service_type', '').strip()
+    status = (request.args.get('status', '') or '').strip().lower()
+    service_type = (request.args.get('service_type', '') or '').strip().lower()
     date_from = request.args.get('date_from', '').strip()
     date_to = request.args.get('date_to', '').strip()
 
@@ -89,7 +101,7 @@ def request_detail(request_id):
     print_request = PrintRequest.query.get_or_404(request_id)
 
     if request.method == 'POST':
-        action = request.form.get('action')
+        action = (request.form.get('action') or '').strip().lower()
 
         if action == 'accept':
             completion_date_str = request.form.get('completion_date', '')

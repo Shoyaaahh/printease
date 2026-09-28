@@ -118,7 +118,7 @@
         </form>{% endif %}
         <div class="d-flex flex-wrap gap-2 {{ 'mt-3' if req.status == 'pending' else '' }}">
             {% if req.status == 'in_queue' %}<form method="POST"><input type="hidden" name="action" value="complete"><button type="submit" class="btn btn-primary action-main">Mark as completed <span aria-hidden="true">✓</span></button></form>{% endif %}
-            <form method="POST" onsubmit="return confirm('Cancel this request?');"><input type="hidden" name="action" value="cancel"><button type="submit" class="btn btn-outline-danger">Cancel request</button></form>
+            <form method="POST" onsubmit="return confirm('Cancel this request?');"><input type="hidden" name="action" value="cancel"><button type="submit" class="btn btn-outline-danger"><span aria-hidden="true">×</span> Cancel request</button></form>
         </div>
     </div>
 </section>

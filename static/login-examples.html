@@ -1,0 +1,70 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>PrintEase Login Concepts</title>
+  <style>
+    :root{font-family:Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif;color:#f4f3ff;background:#090b16;font-synthesis:none;text-rendering:optimizeLegibility}
+    *{box-sizing:border-box}body{margin:0;min-height:100vh;background:#090b16;color:#f4f3ff}button,input{font:inherit}button{cursor:pointer}
+    .topbar{height:72px;border-bottom:1px solid #ffffff17;background:#0b0d19;display:flex;align-items:center;justify-content:space-between;padding:0 clamp(20px,5vw,72px)}
+    .brand{display:flex;align-items:center;gap:10px;font-size:18px;font-weight:750;letter-spacing:-.04em}.brand-icon{width:30px;height:26px;border-radius:8px;background:linear-gradient(145deg,#7657f6,#398bff);position:relative;box-shadow:0 7px 20px #4b6df455}.brand-icon:before{content:"";position:absolute;width:14px;height:7px;border-radius:3px 3px 1px 1px;background:#e1e7ff;left:8px;top:-3px}.brand-icon:after{content:"";position:absolute;height:3px;width:15px;left:7px;top:13px;border-radius:5px;background:#203783}
+    .top-note{color:#9294ac;font-size:12px}
+    .page{max-width:1220px;margin:0 auto;padding:30px clamp(20px,5vw,72px) 50px}.intro{display:flex;align-items:flex-end;justify-content:space-between;gap:24px;margin:10px 0 24px}.intro h1{font-size:clamp(24px,3vw,34px);line-height:1.08;letter-spacing:-.05em;margin:0 0 7px}.intro p{color:#9c9db2;margin:0;font-size:14px}
+    .picker{display:flex;gap:6px;padding:5px;border:1px solid #ffffff17;border-radius:12px;background:#111323;flex-shrink:0}.picker button{border:0;background:transparent;color:#a9abc1;border-radius:8px;padding:9px 12px;font-weight:650;font-size:12px}.picker button[aria-pressed="true"]{background:#252842;color:#fff;box-shadow:inset 0 0 0 1px #ffffff12}
+    .preview{min-height:570px;border-radius:20px;overflow:hidden;border:1px solid #ffffff1b;position:relative;display:grid;grid-template-columns:1.05fr .85fr;align-items:center;gap:clamp(30px,7vw,95px);padding:clamp(34px,7vw,92px);transition:background .25s,color .25s}
+    .concept-copy{max-width:520px}.kicker{display:inline-flex;align-items:center;gap:8px;font-size:11px;text-transform:uppercase;letter-spacing:.11em;font-weight:750;color:#c9beff}.kicker i{width:7px;height:7px;border-radius:50%;background:#65d7aa;box-shadow:0 0 0 4px #65d7aa22}.concept-copy h2{font-size:clamp(38px,6vw,70px);letter-spacing:-.065em;line-height:.98;margin:22px 0 17px}.concept-copy h2 em{font-style:normal;background:linear-gradient(95deg,#a18aff,#69baff);background-clip:text;color:transparent}.concept-copy>p{max-width:440px;color:#b0b1c6;font-size:16px;line-height:1.7;margin:0}.pills{display:flex;flex-wrap:wrap;gap:9px;margin-top:25px}.pills span{border:1px solid #ffffff20;background:#ffffff08;color:#d4d4e4;border-radius:999px;padding:9px 12px;font-size:12px}.paper-art{margin-top:35px;width:132px;height:91px;position:relative;border-radius:14px;background:linear-gradient(140deg,#4161da,#2545a9);box-shadow:0 18px 35px #15174888}.paper-art:before{content:"";position:absolute;left:20px;top:-16px;width:87px;height:31px;border-radius:8px 8px 3px 3px;background:#e3e9ff;box-shadow:0 -6px 0 #cbd6ff}.paper-art:after{content:"";position:absolute;left:24px;right:24px;top:38px;height:6px;background:#192e7d;border-radius:4px;box-shadow:76px -13px 0 -1px #73c5ff}
+    .login-card{width:min(100%,410px);justify-self:end;padding:32px;border:1px solid #ffffff1a;border-radius:20px;background:linear-gradient(145deg,#181a2d,#111322);box-shadow:0 28px 75px #03040a88;position:relative}.login-card:before{content:"";height:2px;position:absolute;inset:0 0 auto;background:linear-gradient(90deg,#805eff,#47a4ff,#bd77ff)}.card-kicker{display:inline-block;color:#c7baff;background:#ffffff08;border:1px solid #ffffff14;border-radius:999px;padding:7px 11px;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.04em}.login-card h3{font-size:26px;letter-spacing:-.05em;margin:26px 0 5px}.sub{font-size:13px;color:#9fa1b7;margin:0 0 24px}.field{margin:0 0 17px}.field label{display:block;font-size:12px;font-weight:700;margin-bottom:7px;color:#dbdbea}.field input{width:100%;height:48px;border:1px solid #ffffff1c;border-radius:10px;background:#0c0f1e;color:#fff;padding:0 13px;outline:none}.field input::placeholder{color:#747891}.field input:focus{border-color:#8974ff;box-shadow:0 0 0 3px #7657f633}.password-row{position:relative}.password-row input{padding-right:55px}.show{position:absolute;right:9px;top:50%;transform:translateY(-50%);border:0;background:none;color:#aeb1c6;font-size:11px;font-weight:700;padding:8px}.login-button{width:100%;height:49px;border:0;border-radius:10px;background:linear-gradient(100deg,#7657f6,#4c75f0);color:#fff;font-weight:750;box-shadow:0 10px 25px #6449e344;margin-top:4px}.helper{text-align:center;color:#9fa1b7;font-size:13px;margin:22px 0 0}.helper a{color:#b9a8ff;font-weight:700}.concept-label{position:absolute;right:22px;bottom:18px;color:#8c8da3;font-size:11px}
+    /* Bright concept */
+    .preview[data-concept="bright"]{background:radial-gradient(ellipse at 10% 15%,#e1d8ff,transparent 45%),linear-gradient(120deg,#f8f7fc,#eeeffb);color:#211d32;border-color:#e5e1f1}.preview[data-concept="bright"] .kicker{color:#6747bd}.preview[data-concept="bright"] .concept-copy h2 em{background:linear-gradient(90deg,#7554d4,#4583d8);background-clip:text}.preview[data-concept="bright"] .concept-copy>p{color:#6f6c7d}.preview[data-concept="bright"] .pills span{color:#554d68;border-color:#ddd7ea;background:#ffffff70}.preview[data-concept="bright"] .paper-art{background:linear-gradient(140deg,#805edb,#4f82d9);box-shadow:0 16px 34px #6b54ad38}.preview[data-concept="bright"] .login-card{background:#fff;border-color:#e8e4f1;box-shadow:0 25px 65px #34304b1c;color:#262238}.preview[data-concept="bright"] .login-card:before{background:linear-gradient(90deg,#835ce4,#588ee9)}.preview[data-concept="bright"] .card-kicker{color:#6746be;background:#f2effb;border-color:#e8e1f6}.preview[data-concept="bright"] .sub{color:#787487}.preview[data-concept="bright"] .field label{color:#39354a}.preview[data-concept="bright"] .field input{background:#faf9fd;border-color:#e3dfeb;color:#28243a}.preview[data-concept="bright"] .field input::placeholder{color:#9995a4}.preview[data-concept="bright"] .show{color:#6c6680}.preview[data-concept="bright"] .helper{color:#777386}.preview[data-concept="bright"] .helper a{color:#6947c6}.preview[data-concept="bright"] .concept-label{color:#777386}
+    /* Print shop concept */
+    .preview[data-concept="print"]{background:#f1ebdc;color:#29291f;border-color:#ddd2bb}.preview[data-concept="print"] .kicker{color:#536a54}.preview[data-concept="print"] .kicker i{background:#6b936c;box-shadow:0 0 0 4px #6b936c25}.preview[data-concept="print"] .concept-copy h2{font-family:Georgia,serif;font-weight:500;letter-spacing:-.06em}.preview[data-concept="print"] .concept-copy h2 em{background:linear-gradient(90deg,#315b4b,#638050);background-clip:text}.preview[data-concept="print"] .concept-copy>p{color:#696756}.preview[data-concept="print"] .pills span{color:#4e5547;border-color:#d3c9b2;background:#fff9}.preview[data-concept="print"] .paper-art{background:linear-gradient(140deg,#47765f,#315343);box-shadow:0 16px 34px #29463433}.preview[data-concept="print"] .paper-art:before{background:#fffdf4;box-shadow:0 -6px 0 #e8dec8}.preview[data-concept="print"] .paper-art:after{background:#315343;box-shadow:76px -13px 0 -1px #dfb969}.preview[data-concept="print"] .login-card{background:#fffdf7;color:#302f25;border-color:#e4dac5;box-shadow:0 22px 52px #51492e1c}.preview[data-concept="print"] .login-card:before{background:linear-gradient(90deg,#39715a,#d3aa5d)}.preview[data-concept="print"] .card-kicker{color:#54735f;background:#f2f3e9;border-color:#e5e5d6}.preview[data-concept="print"] .sub{color:#777466}.preview[data-concept="print"] .field label{color:#424136}.preview[data-concept="print"] .field input{background:#fffefa;border-color:#dfddcf;color:#29291f}.preview[data-concept="print"] .field input::placeholder{color:#999787}.preview[data-concept="print"] .show{color:#6d705f}.preview[data-concept="print"] .login-button{background:#315b49;box-shadow:0 8px 20px #315b4930}.preview[data-concept="print"] .helper{color:#777466}.preview[data-concept="print"] .helper a{color:#315b49}.preview[data-concept="print"] .concept-label{color:#777466}
+    .below{display:flex;justify-content:space-between;align-items:center;gap:16px;padding:18px 4px;color:#a5a6bb;font-size:13px}.below strong{color:#f2f1ff}.kbd{font-size:11px;color:#8e90a8}
+    @media(max-width:760px){.top-note{display:none}.intro{align-items:flex-start;flex-direction:column}.picker{width:100%}.picker button{flex:1;padding:10px 4px}.preview{grid-template-columns:1fr;padding:35px 24px;gap:26px}.concept-copy h2{font-size:50px}.paper-art{display:none}.login-card{justify-self:stretch;width:100%;padding:25px}.preview{min-height:0}.concept-label{right:14px;bottom:10px;font-size:9px}.below{padding-bottom:5px}}
+    @media(max-width:380px){.page{padding-inline:14px}.picker button{font-size:11px}.concept-copy h2{font-size:43px}}
+  </style>
+</head>
+<body>
+  <header class="topbar"><div class="brand"><span class="brand-icon" aria-hidden="true"></span>PrintEase</div><div class="top-note">Login page design examples</div></header>
+  <main class="page">
+    <div class="intro"><div><h1>Choose a direction</h1><p>Switch between three full-page login concepts for your campus print desk.</p></div>
+      <div class="picker" role="group" aria-label="Choose login concept">
+        <button type="button" data-choice="dark" aria-pressed="true">01&nbsp; Dark</button>
+        <button type="button" data-choice="bright" aria-pressed="false">02&nbsp; Bright</button>
+        <button type="button" data-choice="print" aria-pressed="false">03&nbsp; Print shop</button>
+      </div>
+    </div>
+    <section class="preview" data-concept="dark" aria-label="Login page preview">
+      <div class="concept-copy"><div class="kicker"><i></i><span class="kicker-text">Your campus print desk</span></div><h2 class="headline">Good ideas<br>deserve a <em>great print.</em></h2><p class="description">Send your files, choose your print details, and keep an eye on every order from one simple place.</p><div class="pills"><span>✦ Easy file upload</span><span>◷ Live order updates</span><span>↗ Student priority lane</span></div><div class="paper-art" aria-hidden="true"></div></div>
+      <form class="login-card"><span class="card-kicker">Welcome back</span><h3 class="form-title">Sign in to PrintEase</h3><p class="sub">Your next print is just a few clicks away.</p><div class="field"><label for="email">Email address</label><input id="email" type="email" placeholder="you@school.edu" autocomplete="username"></div><div class="field"><label for="password">Password</label><div class="password-row"><input id="password" type="password" placeholder="Enter your password" autocomplete="current-password"><button class="show" type="button" aria-label="Show password">Show</button></div></div><button class="login-button" type="submit">Log in <span aria-hidden="true">→</span></button><p class="helper">New to PrintEase? <a href="#signup">Create an account</a></p></form>
+      <div class="concept-label">CONCEPT 01 · REFINED DARK</div>
+    </section>
+    <div class="below"><span><strong id="choice-title">Refined dark</strong> · Familiar violet and blue, with a focused login card.</span><span class="kbd">Form is a visual demo</span></div>
+  </main>
+  <script>
+    const preview = document.querySelector('.preview');
+    const descriptions = {
+      dark: {title:'Refined dark', label:'CONCEPT 01 · REFINED DARK', kicker:'Your campus print desk', headline:'Good ideas<br>deserve a <em>great print.</em>', description:'Send your files, choose your print details, and keep an eye on every order from one simple place.', button:'Log in'},
+      bright: {title:'Bright and friendly', label:'CONCEPT 02 · BRIGHT AND FRIENDLY', kicker:'Printing made simple', headline:'Your next<br><em>print starts here.</em>', description:'An open, welcoming layout that makes it easy for students to sign in and get back to their work.', button:'Continue'},
+      print: {title:'Print shop editorial', label:'CONCEPT 03 · PRINT SHOP EDITORIAL', kicker:'Made for campus creators', headline:'Made for the<br><em>things you make.</em>', description:'Warm paper tones and a deep green accent give the page a tactile, print-shop character.', button:'Sign in'}
+    };
+    document.querySelectorAll('[data-choice]').forEach(button => button.addEventListener('click', () => {
+      const key = button.dataset.choice; const item = descriptions[key];
+      preview.dataset.concept = key;
+      document.querySelectorAll('[data-choice]').forEach(option => option.setAttribute('aria-pressed', String(option === button)));
+      document.querySelector('.kicker-text').textContent = item.kicker;
+      document.querySelector('.headline').innerHTML = item.headline;
+      document.querySelector('.description').textContent = item.description;
+      document.querySelector('.login-button').innerHTML = item.button + ' <span aria-hidden="true">→</span>';
+      document.querySelector('.concept-label').textContent = item.label;
+      document.querySelector('#choice-title').textContent = item.title;
+    }));
+    document.querySelector('.show').addEventListener('click', event => {
+      const input = document.querySelector('#password'); const reveal = input.type === 'password';
+      input.type = reveal ? 'text' : 'password'; event.currentTarget.textContent = reveal ? 'Hide' : 'Show';
+      event.currentTarget.setAttribute('aria-label', reveal ? 'Hide password' : 'Show password');
+    });
+    document.querySelector('.login-card').addEventListener('submit', event => event.preventDefault());
+  </script>
+</body>
+</html>

@@ -5,9 +5,8 @@ Central place for notifying a customer about their print request.
 - Email is sent through Flask-Mail IF the MAIL_SERVER config is set. If it's
   left blank (the default), email sending is silently skipped so the app
   keeps working out of the box.
-- SMS is stubbed out below. Wiring it up needs a paid SMS API account (e.g.
-  Semaphore, which is commonly used in the Philippines, or Twilio) and your
-  own API key - see the comment in _send_sms_safely for how to enable it.
+- SMS is sent through Semaphore when SEMAPHORE_API_KEY is configured. Without
+  credentials, SMS is skipped and in-app notifications continue to work.
 """
 
 from flask import current_app
@@ -51,20 +50,35 @@ def _send_sms_safely(user, message):
 
     api_key = current_app.config.get('SEMAPHORE_API_KEY')
     if not api_key:
-        # No SMS provider configured - just log what would have been sent.
-        current_app.logger.info(f'[SMS not configured] Would text {phone_number}: {message}')
+        current_app.logger.info('[SMS not configured] Skipping customer SMS notification.')
         return
 
     try:
-        import requests  # only needed if you actually enable SMS
-        requests.post(
+        import requests
+        response = requests.post(
             'https://api.semaphore.co/api/v4/messages',
             data={
                 'apikey': api_key,
                 'number': phone_number,
                 'message': message,
+                **({'sendername': current_app.config['SEMAPHORE_SENDERNAME']}
+                   if current_app.config.get('SEMAPHORE_SENDERNAME') else {}),
             },
-            timeout=5,
+            timeout=10,
         )
-    except Exception as exc:
+        response.raise_for_status()
+        try:
+            result = response.json()
+        except ValueError:
+            current_app.logger.warning('Semaphore returned an invalid SMS response.')
+            return
+
+        results = result if isinstance(result, list) else [result]
+        if not results or any(
+            not isinstance(item, dict)
+            or str(item.get('status', '')).lower() not in {'queued', 'pending', 'sent'}
+            for item in results
+        ):
+            current_app.logger.warning('Semaphore rejected an SMS notification (recipient omitted).')
+    except Exception as exc:  # never let a failed SMS break the request flow
         current_app.logger.warning(f'Could not send SMS notification: {exc}')

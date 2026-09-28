@@ -39,7 +39,7 @@
                 <td>{{ r.formatted_price }}</td>
                 <td>{{ r.submitted_at.strftime('%b %d, %I:%M %p') }}</td>
                 <td><span class="badge bg-{{ r.status_badge }}">{{ r.status_label }}</span></td>
-                <td><a href="{{ url_for('admin.request_detail', request_id=r.id) }}" class="btn btn-sm btn-outline-primary">Review</a></td>
+                <td><a href="{{ url_for('admin.request_detail', request_id=r.id) }}" class="btn btn-sm btn-outline-primary"><span aria-hidden="true">⌕</span> Review</a></td>
             </tr>
             {% else %}
             <tr><td colspan="11" class="text-center text-muted py-4">Nothing here.</td></tr>
@@ -56,6 +56,8 @@
     <div class="admin-stat-card"><span class="admin-stat-icon stat-purple">◷</span><div><small>Priority lane</small><strong>{{ priority_lane|length }}</strong><span>requests to prioritize</span></div></div>
     <div class="admin-stat-card"><span class="admin-stat-icon stat-blue">▤</span><div><small>Regular queue</small><strong>{{ regular_lane|length }}</strong><span>active requests</span></div></div>
     <div class="admin-stat-card"><span class="admin-stat-icon stat-green">✓</span><div><small>Active requests</small><strong>{{ active_total }}</strong><span>currently needing attention</span></div></div>
+    <div class="admin-stat-card"><span class="admin-stat-icon stat-green">₱</span><div><small>Completed sales</small><strong>{{ currency_symbol }}{{ '%.2f'|format(sales_total) }}</strong><span>all time</span></div></div>
+    <div class="admin-stat-card"><span class="admin-stat-icon stat-blue">↗</span><div><small>Sales this month</small><strong>{{ currency_symbol }}{{ '%.2f'|format(sales_month) }}</strong><span>completed this month</span></div></div>
 </div>
 
 <div class="admin-queue-section" id="priority-lane"><div class="admin-queue-heading"><div><span class="queue-dot priority-dot"></span><div><h2>Priority lane</h2><p>Students and urgent requests</p></div></div><span class="notes-count">{{ priority_lane|length }} waiting</span></div>

@@ -10,7 +10,10 @@ from werkzeug.utils import secure_filename
 
 from extensions import db
 from models import PrintRequest, RequestComment, Notification
-from pricing import SERVICE_TYPES, PAPER_SIZES, SHIRT_SIZES, calculate_price
+from pricing import (
+    SERVICE_TYPES, PAPER_SIZES, SHIRT_SIZES, PRICING,
+    CURRENCY_SYMBOL, URGENT_SURCHARGE_RATE, calculate_price,
+)
 from file_preview import generate_preview
 
 customer_bp = Blueprint('customer', __name__, url_prefix='/customer')
@@ -33,8 +36,8 @@ def require_customer():
 def dashboard():
     query = PrintRequest.query.filter_by(customer_id=current_user.id)
     search = request.args.get('q', '').strip()
-    status = request.args.get('status', '').strip()
-    service_type = request.args.get('service_type', '').strip()
+    status = (request.args.get('status', '') or '').strip().lower()
+    service_type = (request.args.get('service_type', '') or '').strip().lower()
     allowed_statuses = {'pending', 'in_queue', 'completed', 'cancelled'}
 
     if search:
@@ -94,9 +97,9 @@ def _parse_float(value, default=None):
 def submit_request():
     if request.method == 'POST':
         file = request.files.get('design_file')
-        service_type = request.form.get('service_type', '')
+        service_type = (request.form.get('service_type', '') or '').strip().lower()
         copies_raw = request.form.get('copies', '1')
-        is_urgent = request.form.get('is_urgent') == 'on'
+        is_urgent = current_user.customer_type != 'student' and request.form.get('is_urgent') == 'on'
         is_colored = request.form.get('is_colored') == 'on'
 
         # service-specific raw inputs
@@ -106,6 +109,11 @@ def submit_request():
         height_ft_raw = request.form.get('height_ft', '').strip()
         shirt_size = request.form.get('shirt_size', '').strip()
         shirt_color = request.form.get('shirt_color', '').strip()
+
+        if paper_size:
+            paper_size = next((size for size in PAPER_SIZES if size.lower() == paper_size.lower()), paper_size)
+        if shirt_size:
+            shirt_size = next((size for size in SHIRT_SIZES if size.lower() == shirt_size.lower()), shirt_size)
 
         errors = []
 
@@ -147,7 +155,10 @@ def submit_request():
             return render_template(
                 'customer/submit_request.html',
                 service_types=SERVICE_TYPES, paper_sizes=PAPER_SIZES,
-                shirt_sizes=SHIRT_SIZES, form=request.form,
+                shirt_sizes=SHIRT_SIZES, pricing=PRICING,
+                currency_symbol=CURRENCY_SYMBOL,
+                urgent_surcharge_rate=URGENT_SURCHARGE_RATE,
+                form=request.form,
             )
 
         original_filename = secure_filename(file.filename)
@@ -197,7 +208,10 @@ def submit_request():
     return render_template(
         'customer/submit_request.html',
         service_types=SERVICE_TYPES, paper_sizes=PAPER_SIZES,
-        shirt_sizes=SHIRT_SIZES, form={},
+        shirt_sizes=SHIRT_SIZES, pricing=PRICING,
+        currency_symbol=CURRENCY_SYMBOL,
+        urgent_surcharge_rate=URGENT_SURCHARGE_RATE,
+        form={},
     )
 
 

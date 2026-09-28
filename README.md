@@ -7,7 +7,7 @@ for Marian's Printing Services — built with Flask + SQLite.
 
 - **Accounts:** customer sign up / login, two customer types (Normal, Student — students
   enter a student ID in the format `XX-XXXXX`, e.g. `22-01234`). Optional phone number
-  at signup for future SMS updates.
+  at signup for SMS status updates.
 - **Separate admin login** with its own dashboard (seeded automatically on first run).
 - **Six print services to choose from:**
   - Normal Print (on paper)
@@ -34,8 +34,8 @@ for Marian's Printing Services — built with Flask + SQLite.
 - **Order history & search (admin):** filter past and current requests by
   customer name/email, status, service type, and date range.
 - **Notifications:** always saved in-app (visible on the customer's dashboard).
-  Email is sent too if you configure SMTP settings (see below) — if you don't,
-  it's silently skipped and nothing breaks. SMS is stubbed out (see below).
+  Email is sent if SMTP is configured. SMS status updates are sent through Semaphore
+  when API credentials are configured (see below).
 - **Add-on notes:** customers can add a follow-up note/comment to a request after
   submitting it (e.g. "please also print 2 more copies").
 
@@ -48,7 +48,7 @@ printease/
 ├── extensions.py              # Shared db / login_manager / mail instances
 ├── models.py                  # User, PrintRequest, RequestComment, Notification
 ├── pricing.py                 # Service types, price list, price calculator
-├── notifications.py           # In-app + email + SMS-stub notification helper
+├── notifications.py           # In-app, email, and Semaphore SMS notifications
 ├── file_preview.py            # Generates a preview thumbnail for uploads
 ├── requirements.txt
 ├── auth/routes.py             # signup / login / logout
@@ -114,17 +114,22 @@ export MAIL_PASSWORD=your_app_password   # use an App Password, not your real pa
 export MAIL_DEFAULT_SENDER=your_email@gmail.com
 ```
 
-## Turning on real SMS notifications
+## Turning on SMS notifications
 
-SMS isn't wired to a live provider out of the box — that needs a paid SMS API
-account and your own credentials. `notifications.py` includes a ready example for
-**Semaphore** (a common SMS API for Philippine numbers: https://semaphore.co):
+PrintEase sends customer status updates using the Semaphore SMS API. Semaphore
+requires an account, an active sender name, and message credits. Add these
+environment variables before starting the app:
 
-1. Sign up for an account and get an API key.
-2. `export SEMAPHORE_API_KEY=your_key_here`
-3. Uncomment the `requests.post(...)` block in `notifications.py`.
+```bash
+SEMAPHORE_API_KEY=your_key_here
+SEMAPHORE_SENDERNAME=YourApprovedSenderName
+```
 
-Until then, PrintEase just logs what *would* have been sent, so nothing breaks.
+Install the project dependencies with `pip install -r requirements.txt` so the
+HTTP client is available. Customers also need a valid phone number saved in their
+profile. SMS is submitted immediately after an in-app status notification is saved;
+if Semaphore is not configured or rejects a message, the in-app notification still
+works and the server log records the SMS failure.
 
 ## Notes / things you may want to add next
 
